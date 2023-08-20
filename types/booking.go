@@ -12,5 +12,6 @@ type Booking struct {
 	RoomID 		primitive.ObjectID 		`bson:"roomID,omitempty" json:"roomID,omitempty"` 	
 	NumPersons 	int						`bson:"numPersons" json:"numPersons"` 
 	FromDate 	time.Time				`bson:"fromDate" json:"fromDate"` 	
-	TillDate 	time.Time				`bson:"tillDate" json:"tillDate"` 	
+	TillDate 	time.Time				`bson:"tillDate" json:"tillDate"` 
+	Canceled 	bool 					`bson:"canceled" json:"canceled"`	
 }
