@@ -28,7 +28,6 @@ func (p BookRoomParams) validate() error {
 	if now.After(p.FromDate) || now.After(p.TillDate) {
 		return fmt.Errorf("cannot book a room in the past")
 	}
-	
 	return nil
 }
 
@@ -41,23 +40,20 @@ func NewRoomHandler(store *db.Store) *RoomHandler {
 func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 	var params BookRoomParams
 	if err := c.BodyParser(&params); err != nil {
-		return err
+		return ErrBadRequest()
 	}
 	if err := params.validate(); err != nil {
-		return err
+		return NewError(http.StatusBadRequest, err.Error())
 	}
 	
 	roomID, err := primitive.ObjectIDFromHex(c.Params("id"))
 	if err != nil {
-		return err
+		return ErrInvalidID()
 	}
 
 	user, ok := c.Context().UserValue("user").(*types.User)
 	if !ok {
-		return c.Status(http.StatusInternalServerError).JSON(genericResp{
-			Type: "error",
-			Msg: "internal server error",
-		})
+		return NewError(http.StatusInternalServerError, "internal server error")
 	}
 
 	ok, err = h.isRoomAvailableForBooking(c.Context(), roomID, params) 
@@ -65,10 +61,7 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 		return err
 	}
 	if !ok {
-		return c.Status(http.StatusBadRequest).JSON(genericResp{
-			Type: "error",
-			Msg: fmt.Sprintf("room %s already booked", c.Params("id")),
-		})	
+		return NewError(http.StatusBadRequest, "room already booked")
 	}
 
 	booking := types.Booking{
@@ -90,7 +83,7 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 func (h *RoomHandler) HandleGetRooms(c *fiber.Ctx) error {
 	rooms, err := h.store.Room.GetRooms(c.Context(), bson.M{})
 	if err != nil {
-		return err
+		return ErrResourceNotFound("rooms")
 	}
 	return c.JSON(rooms)
 }
