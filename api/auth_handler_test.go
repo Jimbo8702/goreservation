@@ -61,7 +61,7 @@ func TestAuthenticateWithWrongPassword(t *testing.T) {
 	fixtures.AddUser(tdb.Store, "james", "foo", false)
 
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{ErrorHandler: ErrorHandler})
 	authHandler := NewAuthHandler(tdb.User)
 	app.Post("/auth", authHandler.HandleAuthenticate)
 
@@ -80,14 +80,11 @@ func TestAuthenticateWithWrongPassword(t *testing.T) {
 	if resp.StatusCode != http.StatusBadRequest {
 		t.Fatalf("expected http status of 400 but got %d", resp.StatusCode)
 	}
-	var genResp genericResp
-	if err := json.NewDecoder(resp.Body).Decode(&genResp); err != nil {
+	var errResp Error
+	if err := json.NewDecoder(resp.Body).Decode(&errResp); err != nil {
 		t.Fatal(err)
 	}
-	if genResp.Type != "error" {
-		t.Fatalf("expected gen response type to be error but got %s", genResp.Type)
-	}
-	if genResp.Msg != "invalid credentials" {
-		t.Fatalf("expected gen resposne message to be invalid credentials but got %s", genResp.Msg)
+	if errResp.Err != "invalid credentials" {
+		t.Fatalf("expected error to be invalid credentials but got %s", errResp.Err)
 	}
 }

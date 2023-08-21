@@ -2,11 +2,13 @@ package db
 
 import (
 	"context"
+	"os"
 
 	"github.com/Jimbo8702/goreservation/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const hotelColl = "hotels"
@@ -14,7 +16,7 @@ const hotelColl = "hotels"
 type HotelStore interface {
 	InsertHotel(context.Context, *types.Hotel) (*types.Hotel, error)
 	UpdateHotel(context.Context, Map, Map) error
-	GetHotels(context.Context, Map) ([]*types.Hotel, error) 
+	GetHotels(context.Context, Map, *Pagination) ([]*types.Hotel, error) 
 	GetHotelByID(context.Context, string) (*types.Hotel, error)
 }
 
@@ -23,10 +25,11 @@ type MongoHotelStore struct {
 	coll 	*mongo.Collection
 }
 
-func NewMongoHotelStore(client *mongo.Client) *MongoHotelStore{
+func NewMongoHotelStore(client *mongo.Client) *MongoHotelStore {
+	dbName := os.Getenv(MongoDBNameEnvName)
 	return &MongoHotelStore{
 		client: client,
-		coll: client.Database(DBNAME).Collection(hotelColl),
+		coll: client.Database(dbName).Collection(hotelColl),
 	}
 }
 
@@ -42,8 +45,11 @@ func (s *MongoHotelStore) GetHotelByID(ctx context.Context, id string) (*types.H
 	return &hotel, nil
 }
 
-func (s *MongoHotelStore) GetHotels(ctx context.Context, filter Map) ([]*types.Hotel, error) {
-	resp, err := s.coll.Find(ctx, filter)
+func (s *MongoHotelStore) GetHotels(ctx context.Context, filter Map, pag *Pagination) ([]*types.Hotel, error) {
+	opts := options.FindOptions{}
+	opts.SetSkip((pag.Page - 1) * pag.Limit)
+	opts.SetLimit(pag.Limit)
+	resp, err := s.coll.Find(ctx, filter, &opts)
 	if err != nil {
 		return nil, err
 	}

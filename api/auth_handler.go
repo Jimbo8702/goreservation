@@ -34,7 +34,6 @@ type AuthResponse struct {
 type genericResp struct {
 	Type	string 	`json:"type"`
 	Msg		string
-
 }
 
 func (h *AuthHandler) HandleAuthenticate(c *fiber.Ctx) error {
