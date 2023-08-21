@@ -1,14 +1,9 @@
 package api
 
 import (
-	"errors"
-
 	"github.com/Jimbo8702/goreservation/db"
 	"github.com/Jimbo8702/goreservation/types"
 	"github.com/gofiber/fiber/v2"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type UserHandler struct {
@@ -26,14 +21,10 @@ func (h *UserHandler) HandlePutUser(c *fiber.Ctx) error {
 		params types.UpdateUserParams
 		userID = c.Params("id")
 	)
-	oid, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		return ErrInvalidID()
-	}
 	if err := c.BodyParser(&params); err != nil {
 		return ErrBadRequest()
 	}
-	filter := bson.M{"_id": oid}
+	filter := db.Map{"_id": userID}
 	if err := h.userStore.UpdateUser(c.Context(), filter, params); err != nil {
 		return err
 	}
@@ -71,10 +62,7 @@ func (h *UserHandler) HandleGetUser(c *fiber.Ctx) error {
 	id := c.Params("id")
 	user, err := h.userStore.GetUserByID(c.Context(), id)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return ErrResourceNotFound("user")
-		}
-		return err
+		return ErrResourceNotFound("user")
 	}
 	return c.JSON(user)
 }

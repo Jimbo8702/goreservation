@@ -6,6 +6,8 @@ const (
 	DBURI = "mongodb://localhost:27017"
 )
 
+type Map map[string]any
+
 type Store struct {
 	User 	UserStore
 	Hotel 	HotelStore

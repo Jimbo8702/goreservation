@@ -15,3 +15,25 @@ type Booking struct {
 	TillDate 	time.Time				`bson:"tillDate" json:"tillDate"` 
 	Canceled 	bool 					`bson:"canceled" json:"canceled"`	
 }
+
+type CreateBookingParms struct {
+	UserID 		primitive.ObjectID
+	RoomID 		string
+	NumPersons 	int
+	FromDate 	time.Time
+	TillDate 	time.Time
+}
+
+func NewBookingFromParams(params CreateBookingParms) (*Booking, error) {
+	rid, err := primitive.ObjectIDFromHex(params.RoomID)
+	if err != nil {
+		return nil, err
+	}
+	return &Booking{
+		UserID: params.UserID,
+		RoomID: rid,
+		NumPersons: params.NumPersons,
+		FromDate: params.FromDate,
+		TillDate: params.TillDate,
+	}, nil
+}
